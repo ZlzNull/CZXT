@@ -40,6 +40,9 @@ fun main() {
                 displayMemUsage()
                 flag = false
             }
+            6 -> {
+                re()
+            }
             0 -> {
                 f = false
             }
@@ -50,6 +53,13 @@ fun main() {
     }
 }
 
+fun re(){
+    freeBlockArray.clear()
+    memSize = DEFAULT_MEM_SIZE
+    freeBlockArray.add(FreeBlockType(memSize, DEFAULT_MEM_START))
+    allocatedBlockArray.clear()
+}
+
 fun displayMenu() {
     println()
     if (flag) {
@@ -57,10 +67,11 @@ fun displayMenu() {
     } else {
         println("1 - 内存大小为[${freeBlockArray.sumBy { it.size } + allocatedBlockArray.sumBy { it.size }}]")
     }
-    println("2 - 选择空间分配算法")
+    println("2 - 选择空间分配算法(${maAlgorithm})")
     println("3 - 创建新进程")
     println("4 - 删除进程")
     println("5 - 展示内存使用情况")
+    println("6 - 重置内存")
     println("0 - 退出")
 }
 
@@ -128,7 +139,7 @@ fun allocateMem(ab: AllocatedBlock): Boolean {
 fun newProcess() {
     print("请输入进程内存大小:")
     val ab = AllocatedBlock(++pid, input.nextInt(), -1, "PROCESS-[$pid]")
-    if (allocateMem(ab)) {
+    if (ab.size > 0 && allocateMem(ab)) {
         allocatedBlockArray.add(ab)
     } else {
         println("分配内存失败!!")
@@ -142,13 +153,14 @@ fun dispose(freeAb: AllocatedBlock) {
 }
 
 fun displayMemUsage() {
-    println("----------------------------------------------")
-    println("空闲内存:")
+    println("-----------------空闲内存---------------------")
     println("\t开始地址\t\t大小")
-    freeBlockArray.forEach {
+    val temp = ArrayList<FreeBlockType>(freeBlockArray)
+    temp.rearrang(Algorithm.MA_FF)
+    temp.forEach {
         println("\t${it.startAddr}\t\t\t${it.size}")
     }
-    println("\n使用中的内存:")
+    println("----------------使用中的内存-------------------")
     println("\t进程号\t进程名称\t\t\t开始地址\t\t大小")
     allocatedBlockArray.forEach {
         println("\t${it.pid}\t\t${it.processName}\t\t${it.startAddr}\t\t\t${it.size}")
@@ -181,7 +193,8 @@ fun setAlgorithm() {
     println("\t3 - Worst Fit")
     val type = input.nextInt()
     if (type in 1..3) {
-        freeBlockArray.rearrang(Algorithm.values()[type - 1])
+        maAlgorithm = Algorithm.values()[type - 1]
+        freeBlockArray.rearrang(maAlgorithm)
     }
 }
 
